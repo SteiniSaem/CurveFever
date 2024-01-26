@@ -1,49 +1,66 @@
 <script>
-    import { currentPage, players, activeInput } from "../store";
+    import { currentPage, players, canvasDimmensions } from "../store";
     import CustomInput from './CustomInput.svelte'
+    import {isEmpty} from './common';
+    import { startingBallRadius, startingSpeed, maxFramesBetweenGaps } from "./constants";
 
 
-  let availablePlayers = [{name: 'Blue bell', color: 'aqua', leftKeyCode: null, rightKey: null, checked: false},
+  let availablePlayers = [{name: 'Blue bell', color: 'aqua', leftKeyCode: null, rightKeyCode: null, checked: false},
                           {name: 'Red Monkey', color: 'red', leftKeyCode: null, rightKeyCode: null, checked: false},
-                          {name: 'Pink lady', color: 'pink', leftKeyCode: null, rightKeyCode: null, checked: false},
-                          {name: 'Yellow fever', color: 'yellow', leftKeyCode: null, rightKeyCode: null, checked: false},
-                          {name: 'Greeney', color: 'lightgreen', leftKeyCode: null, rightKeyCode: null, checked: false}
+                          {name: 'Pink lady', color: '#f047ff', leftKeyCode: null, rightKeyCode: null, checked: false},
+                          {name: 'Yellow fever', color: 'orange', leftKeyCode: null, rightKeyCode: null, checked: false},
+                          {name: 'Greeney', color: '#23ff0f', leftKeyCode: null, rightKeyCode: null, checked: false}
                         ]
 
-  let show;
   let errorMessage = ''
 
-  currentPage.subscribe(value =>{
-    if(value == 'home'){
-        show = true;
-    } else{
-        show = false;
-    }
-  })
-
   function startGame(){
+    let playerId = 1
+    let dx, dy;
     for(var i in availablePlayers){
       if(availablePlayers[i].checked){
         if(availablePlayers[i].leftKeyCode == null || availablePlayers[i].rightKeyCode == null){
           errorMessage = `Missing buttons for ${availablePlayers[i].name}`
           return;
         }
-        $players = [...$players, availablePlayers[i]]
+        //gera random tölu frá 0 til 1 og svo 50/50 líkur á að margfalda hana með 1 eða -1. Þannig random tala frá -1 til 1
+        [dx, dy] = [Math.random() * (Math.random() ? 1 : -1), Math.random() * (Math.random() ? 1 : -1)]  
+        $players[playerId] = {...availablePlayers[i],
+          leftPressed: false,
+          rightPressed: false,
+          x: Math.random()*$canvasDimmensions.width*0.7,
+          y: Math.random()*$canvasDimmensions.width*0.7,
+          dx: dx,
+          dy: dy,
+          crashed: false,
+          noTrail: true,
+          trailPoints: [{x: this.x, y: this.y}],
+          framesSinceLastTrail: -200, //when game starts, have extra frames of no trail. Trail begins when framesSinceLastTrail reaches 50
+          framesSinceLastNoTrail: 0,
+          framesUntilNextNoTrail: Math.round(Math.random()*maxFramesBetweenGaps),
+          speed: 1,
+          turningConstant: 0.025,
+          powerupTimers: [],
+          ballRadius: startingBallRadius,
+          noTrailPowerupCount: 0,
+          canPassThroughWalls: false,
+          powerupBallTransparency: {value: 0, diff: 0.04},
+        }
+        playerId++;
       }
     }
-    if($players.length == 0){
+    if(isEmpty($players)){
       errorMessage = 'Need players'
       return;
     }
-    console.log(availablePlayers)
+    console.log($players)
 
     $currentPage = 'game';
   }
 
 </script>
 
-{#if show}
-<div id='home-screen'>
+<div id='home-screen' style={$currentPage=='home' ? '' : 'display:none'}>
   <h1 id='title'>Curve Fever</h1>
   <table id='players-table'>
     <tr>
@@ -66,7 +83,6 @@
     <button on:click={startGame}>Start Game</button>
   </div>
 </div>
-{/if}
 
 <style>
     #home-screen{
