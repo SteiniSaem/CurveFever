@@ -28,8 +28,8 @@
         $players[playerId] = {...availablePlayers[i],
           leftPressed: false,
           rightPressed: false,
-          x: Math.random()*$canvasDimmensions.width*0.7,
-          y: Math.random()*$canvasDimmensions.width*0.7,
+          x: Math.floor(Math.random() * ($canvasDimmensions.width*0.7 - $canvasDimmensions.width*0.3)) + $canvasDimmensions.width*0.3,
+          y: Math.floor(Math.random() * ($canvasDimmensions.height*0.7 - $canvasDimmensions.height*0.3)) + $canvasDimmensions.height*0.3,
           dx: dx,
           dy: dy,
           crashed: false,
@@ -43,8 +43,10 @@
           powerupTimers: [],
           ballRadius: startingBallRadius,
           noTrailPowerupCount: 0,
-          canPassThroughWalls: false,
+          canPassThroughWallsPowerupCount: 0,
           powerupBallTransparency: {value: 0, diff: 0.04},
+          originalLeftKeyCode: availablePlayers[i].leftKeyCode,
+          originalRightKeyCode: availablePlayers[i].rightKeyCode, //if a round ends with a player flipped, the key codes can be set to their original values
         }
         playerId++;
       }

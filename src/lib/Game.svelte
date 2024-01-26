@@ -7,18 +7,24 @@
     let startGame = false;
     let restart = false;
     let occupiedPoints = [];
-    let maxFramesUntilPowerup = 400;
+    let maxFramesUntilPowerup = 500;
     let powerUpDuration = 500;
+    let powerFrenzyTimer = 0;
 
     let powerupRadius = 30;
     let framesUntilPowerup = Math.round(Math.random()*maxFramesUntilPowerup);
     let neutralPowers = ['cleanSlate', 'powerFrenzy'];
-    let livePowerups = [];
+    let onlyType1Powers = ["noTrail", 'passThroughWalls']
+    let livePowerups = [{x: 500, y: 500, power: 'halfSpeed', type: 1}, {x: 600, y: 500, power: 'doubleThick', type: 1}];
 
-    let powerEffects = { 'doubleSpeed': doubleSpeed, 'cleanSlate': cleanSlate, 'doubleThick': doubleThick, 'leftRightSwitch': leftRightSwitch, "noTrail": noTrail, 'passThroughWalls': passThroughWalls, 'halfSpeed': halfSpeed}
+    let powerEffects = { 'doubleSpeed': doubleSpeed, 'cleanSlate': cleanSlate, 'doubleThick': doubleThick, 'leftRightSwitch': leftRightSwitch, "noTrail": noTrail, 'passThroughWalls': passThroughWalls, 'halfSpeed': halfSpeed, 'powerFrenzy': powerFrenzy}
     function getRandomPower(){
         var keys = Object.keys(powerEffects);
         return keys[ keys.length * Math.random() << 0];
+    }
+
+    function powerFrenzy(id, activate, type){
+        powerFrenzyTimer = 300;
     }
 
     function halfSpeed(id, activate, type){
@@ -45,10 +51,10 @@
     
     function passThroughWalls(id, activate, type=null){
         if(activate){
-            $players[id].canPassThroughWalls = true;
+            $players[id].canPassThroughWallsPowerupCount += 1;
         }
         else {
-            $players[id].canPassThroughWalls = false;
+            $players[id].canPassThroughWallsPowerupCount -= 1;
         }
     }
 
@@ -153,7 +159,6 @@
             }
         }
         else{
-            console.log('deactivate speed')
             $players[id].speed /= 2
             $players[id].turningConstant /= 2;
         }
@@ -177,14 +182,16 @@
         let dx, dy;
         occupiedPoints = [];
         framesUntilPowerup = maxFramesUntilPowerup;
-        livePowerups = [{x : 100, y: 500, power: 'passThroughWalls', type: 1}];
+        livePowerups = [{x: 500, y: 500, power: 'powerFrenzy', type: 1}];
         for(let id in $players){
             [dx, dy] = [Math.random() * (Math.round(Math.random()) ? 1 : -1), Math.random() * Math.round((Math.random()) ? 1 : -1)];
             console.log([dx, dy])
             $players[id].leftPressed = false;
             $players[id].rightPressed = false;
-            $players[id].x = Math.random()*canvas.height*0.7
-            $players[id].y = Math.random()*canvas.height*0.7
+            $players[id].leftKeyCode = $players[id].originalLeftKeyCode,
+            $players[id].rightKeyCode = $players[id].originalRightKeyCode
+            $players[id].x = Math.floor(Math.random() * ($canvasDimmensions.width*0.7 - $canvasDimmensions.width*0.3)) + $canvasDimmensions.width*0.3;
+            $players[id].y = Math.floor(Math.random() * ($canvasDimmensions.height*0.7 - $canvasDimmensions.height*0.3)) + $canvasDimmensions.height*0.3;
             $players[id].dx = dx;
             $players[id].dy = dy;
             $players[id].crashed = false;
@@ -197,7 +204,7 @@
             $players[id].powerupTimers = [];
             $players[id].ballRadius = startingBallRadius
             $players[id].noTrailPowerupCount = 0;
-            $players[id].canPassThroughWalls = false;
+            $players[id].canPassThroughWallsPowerupCount = 0;
             $players[id].powerupBallTransparency = {value: 0, diff: 0.04};
         }
     }
@@ -231,7 +238,7 @@
             let crashMargin = ballRadius
             for(let i in occupiedPoints){
                 if(occupiedPoints[i].x >= px-crashMargin && occupiedPoints[i].x <= px+crashMargin && occupiedPoints[i].y >= py-crashMargin &&occupiedPoints[i].y <= py+crashMargin){
-                    for(let j = $players[id].trailPoints.length-1; j > $players[id].trailPoints.length-10; j--){
+                    for(let j = $players[id].trailPoints.length-1; j > $players[id].trailPoints.length-30; j--){
                         if(occupiedPoints[i].x == $players[id].trailPoints[j].x && occupiedPoints[i].y == $players[id].trailPoints[j].y){ ////so thick balls don't crash into themselves when slightly turning
                             return false;
                         }
@@ -422,8 +429,50 @@
                 ctx.closePath();
             }
             else if(power == 'powerFrenzy'){
+                ctx.beginPath()
+                ctx.strokeStyle = 'yellow'
+                ctx.arc(x-12, y-10, 4, 0, 2 * Math.PI);
+                ctx.stroke();
+                ctx.closePath();
 
+                ctx.beginPath()
+                ctx.arc(x+3, y-14, 4, 0, 2 * Math.PI)
+                ctx.stroke()
+                ctx.closePath();
+
+                ctx.beginPath()
+                ctx.arc(x, y+5, 4, 0, 2 * Math.PI)
+                ctx.stroke()
+                ctx.closePath();
+
+                ctx.beginPath()
+                ctx.arc(x+15, y, 4, 0, 2 * Math.PI)
+                ctx.stroke()
+                ctx.closePath();
+
+                ctx.beginPath()
+                ctx.arc(x+12, y+15, 4, 0, 2 * Math.PI)
+                ctx.stroke()
+                ctx.closePath();
+
+                ctx.beginPath()
+                ctx.arc(x-15, y+10, 4, 0, 2 * Math.PI)
+                ctx.stroke()
+                ctx.closePath();
+
+                ctx.beginPath()
+                ctx.arc(x+12, y+15, 4, 0, 2 * Math.PI)
+                ctx.stroke()
+                ctx.closePath();
             }
+        }
+
+        function generateRandomPowerup(){
+            let px = Math.random()*canvas.width;
+            let py = Math.random()*canvas.height;
+            let randomPower = getRandomPower();
+            let type = onlyType1Powers.includes(randomPower) ? 1 : Math.round(Math.random())+1
+            livePowerups.push({x: px, y: py, power: randomPower, type: type})
         }
 
 
@@ -466,13 +515,12 @@
                     }
 
                     //draw yellow ball that fades in and out while player has the passTroughWalls powerup
-                    if($players[id].canPassThroughWalls){
+                    if($players[id].canPassThroughWallsPowerupCount > 0){
                         drawBall($players[id].x, $players[id].y, `rgba(255, 255, 0, ${$players[id].powerupBallTransparency.value})`, $players[id].ballRadius + 1);
                         $players[id].powerupBallTransparency.value += $players[id].powerupBallTransparency.diff
                         if($players[id].powerupBallTransparency.value <= 0 || $players[id].powerupBallTransparency.value >= 1){
                             $players[id].powerupBallTransparency.diff *= -1;
                         }
-                        console.log($players[id].powerupBallTransparency.value)
                     }
 
                     //check if powerup has been caught
@@ -548,7 +596,7 @@
                     }
 
 
-                    if($players[id].canPassThroughWalls){
+                    if($players[id].canPassThroughWallsPowerupCount > 0){
                         if($players[id].x >= canvas.width){
                             $players[id].x = 0;
                         }
@@ -572,11 +620,15 @@
                 framesUntilPowerup--;
                 //console.log(framesUntilPowerup)
                 if(framesUntilPowerup <= 0){
-                    let px = Math.random()*canvas.width;
-                    let py = Math.random()*canvas.height;
-                    let keys = 
-                    livePowerups.push({x: px, y: py, power: getRandomPower(), type: Math.round(Math.random())+1})
+                    generateRandomPowerup()
                     framesUntilPowerup = Math.round(Math.random()*maxFramesUntilPowerup)
+                }
+
+                if(powerFrenzyTimer > 0){ //frenzy timer is set to 600 when frenzy powerup is caught. So 5 powerups are generated
+                    powerFrenzyTimer--;
+                    if(powerFrenzyTimer % 50 == 0){
+                        generateRandomPowerup();
+                    }
                 }
             }
             requestAnimationFrame(draw)
