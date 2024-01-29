@@ -1,12 +1,13 @@
 <script>
-    import { currentPage, players, canvasDimmensions } from "../store";
+    import { currentPage, players, canvasDimmensions, maxScore } from "../store";
     import CustomInput from './CustomInput.svelte'
     import {isEmpty} from './common';
     import { startingBallRadius, startingSpeed, maxFramesBetweenGaps } from "./constants";
 
 
-  let availablePlayers = [{name: 'Blue bell', color: 'aqua', leftKeyCode: null, rightKeyCode: null, checked: false},
+  let availablePlayers = [
                           {name: 'Red Monkey', color: 'red', leftKeyCode: null, rightKeyCode: null, checked: false},
+                          {name: 'Blue bell', color: 'aqua', leftKeyCode: null, rightKeyCode: null, checked: false},
                           {name: 'Pink lady', color: '#f047ff', leftKeyCode: null, rightKeyCode: null, checked: false},
                           {name: 'Yellow fever', color: 'orange', leftKeyCode: null, rightKeyCode: null, checked: false},
                           {name: 'Greeney', color: '#23ff0f', leftKeyCode: null, rightKeyCode: null, checked: false}
@@ -24,12 +25,12 @@
           return;
         }
         //gera random tölu frá 0 til 1 og svo 50/50 líkur á að margfalda hana með 1 eða -1. Þannig random tala frá -1 til 1
-        [dx, dy] = [Math.random() * (Math.random() ? 1 : -1), Math.random() * (Math.random() ? 1 : -1)]  
+        [dx, dy] = [Math.random() * (Math.round(Math.random()) ? 1 : -1), Math.random() * Math.round(Math.random()) ? 1 : -1];
         $players[playerId] = {...availablePlayers[i],
           leftPressed: false,
           rightPressed: false,
-          x: Math.floor(Math.random() * ($canvasDimmensions.width*0.7 - $canvasDimmensions.width*0.3)) + $canvasDimmensions.width*0.3,
-          y: Math.floor(Math.random() * ($canvasDimmensions.height*0.7 - $canvasDimmensions.height*0.3)) + $canvasDimmensions.height*0.3,
+          x: Math.floor(Math.random() * ($canvasDimmensions.width*0.8 - $canvasDimmensions.width*0.2)) + $canvasDimmensions.width*0.2,
+          y: Math.floor(Math.random() * ($canvasDimmensions.height*0.8 - $canvasDimmensions.height*0.2)) + $canvasDimmensions.height*0.2,
           dx: dx,
           dy: dy,
           crashed: false,
@@ -44,13 +45,19 @@
           ballRadius: startingBallRadius,
           noTrailPowerupCount: 0,
           canPassThroughWallsPowerupCount: 0,
+          onlyRightAnglesPowerupCount: 0,
           powerupBallTransparency: {value: 0, diff: 0.04},
+          maxFramesBetweenGaps: maxFramesBetweenGaps, //<- constant defined in constants.js
           originalLeftKeyCode: availablePlayers[i].leftKeyCode,
           originalRightKeyCode: availablePlayers[i].rightKeyCode, //if a round ends with a player flipped, the key codes can be set to their original values
+          score: 0,
+          hasReleasedLeft: true,
+          hasReleasedRight: true,
         }
         playerId++;
       }
     }
+    $maxScore = 5*(playerId-1); //playerId-1 is same as player count here
     if(isEmpty($players)){
       errorMessage = 'Need players'
       return;

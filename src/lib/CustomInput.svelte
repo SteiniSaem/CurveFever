@@ -29,7 +29,7 @@
     function keyDown(e){
         if(active){
             e.preventDefault()
-            key = e.key
+            key = e.key.charAt(0).toUpperCase() + e.key.slice(1);
             keyCode = e.keyCode;
         }
     }

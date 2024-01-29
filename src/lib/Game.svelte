@@ -1,26 +1,68 @@
 <script>
-    import { currentPage, players, canvasDimmensions } from "../store";
+    import { currentPage, players, canvasDimmensions, maxScore } from "../store";
     import { onMount } from "svelte";
-    import { startingBallRadius, startingSpeed, maxFramesBetweenGaps, gapLength } from "./constants";
+    import { startingBallRadius, startingSpeed, maxFramesBetweenGaps, gapLength, powerupDuration } from "./constants";
 
     let canvas;
     let startGame = false;
     let restart = false;
+    let roundOver = false;
+    let gameOver = false;
+    let roundWinner = '';
+    let gameWinners = [];
     let occupiedPoints = [];
     let maxFramesUntilPowerup = 500;
-    let powerUpDuration = 500;
     let powerFrenzyTimer = 0;
+    let crashedPlayers = [];
 
     let powerupRadius = 30;
     let framesUntilPowerup = Math.round(Math.random()*maxFramesUntilPowerup);
     let neutralPowers = ['cleanSlate', 'powerFrenzy'];
     let onlyType1Powers = ["noTrail", 'passThroughWalls']
-    let livePowerups = [{x: 500, y: 500, power: 'halfSpeed', type: 1}, {x: 600, y: 500, power: 'doubleThick', type: 1}];
+    let livePowerups = [];
 
-    let powerEffects = { 'doubleSpeed': doubleSpeed, 'cleanSlate': cleanSlate, 'doubleThick': doubleThick, 'leftRightSwitch': leftRightSwitch, "noTrail": noTrail, 'passThroughWalls': passThroughWalls, 'halfSpeed': halfSpeed, 'powerFrenzy': powerFrenzy}
+    let powerEffects = { 'doubleSpeed': doubleSpeed, 'cleanSlate': cleanSlate, 'doubleThick': doubleThick, 'leftRightSwitch': leftRightSwitch, "noTrail": noTrail, 'passThroughWalls': passThroughWalls, 'halfSpeed': halfSpeed, 'powerFrenzy': powerFrenzy, 'frequentGaps': frequentGaps, 'onlyRightAngles': onlyRightAngles}
     function getRandomPower(){
         var keys = Object.keys(powerEffects);
         return keys[ keys.length * Math.random() << 0];
+    }
+
+    function onlyRightAngles(id, activate, type){
+        if(activate){
+            if(type == 1){
+                $players[id].onlyRightAnglesPowerupCount += 1;
+            }
+            else{
+                for(let i in $players){
+                    if(parseInt(i) != id){
+                        $players[id].onlyRightAnglesPowerupCount += 1;
+                    }
+                }
+            }
+        }
+        else{
+            $players[id].onlyRightAnglesPowerupCount -= 1;
+        }
+    }
+
+    function frequentGaps(id, activate, type){
+        if(activate){
+            if(type == 1){
+                $players[id].maxFramesBetweenGaps = 70;
+                $players[id].framesUntilNextNoTrail = Math.round(Math.random()*70)
+            }
+            else{
+                for(let i in $players){
+                    if(parseInt(i) != id){
+                        $players[i].maxFramesBetweenGaps = 70;
+                        $players[id].framesUntilNextNoTrail = Math.round(Math.random()*70)
+                    }
+                }
+            }
+        }
+        else{
+            $players[id].maxFramesBetweenGaps = maxFramesBetweenGaps
+        }
     }
 
     function powerFrenzy(id, activate, type){
@@ -173,7 +215,10 @@
     }
 
     function pageBack(){
+        startGame = false;
         restart = true;
+        gameOver = false;
+        roundOver = false;
         $currentPage = 'home';
     }
 
@@ -182,16 +227,16 @@
         let dx, dy;
         occupiedPoints = [];
         framesUntilPowerup = maxFramesUntilPowerup;
-        livePowerups = [{x: 500, y: 500, power: 'powerFrenzy', type: 1}];
+        livePowerups = [];
+        crashedPlayers = [];
         for(let id in $players){
-            [dx, dy] = [Math.random() * (Math.round(Math.random()) ? 1 : -1), Math.random() * Math.round((Math.random()) ? 1 : -1)];
-            console.log([dx, dy])
+            [dx, dy] = [Math.random() * (Math.round(Math.random()) ? 1 : -1), Math.random() * Math.round(Math.random()) ? 1 : -1];
             $players[id].leftPressed = false;
             $players[id].rightPressed = false;
             $players[id].leftKeyCode = $players[id].originalLeftKeyCode,
             $players[id].rightKeyCode = $players[id].originalRightKeyCode
-            $players[id].x = Math.floor(Math.random() * ($canvasDimmensions.width*0.7 - $canvasDimmensions.width*0.3)) + $canvasDimmensions.width*0.3;
-            $players[id].y = Math.floor(Math.random() * ($canvasDimmensions.height*0.7 - $canvasDimmensions.height*0.3)) + $canvasDimmensions.height*0.3;
+            $players[id].x = Math.floor(Math.random() * ($canvasDimmensions.width*0.8 - $canvasDimmensions.width*0.2)) + $canvasDimmensions.width*0.2;
+            $players[id].y = Math.floor(Math.random() * ($canvasDimmensions.height*0.8 - $canvasDimmensions.height*0.2)) + $canvasDimmensions.height*0.2;
             $players[id].dx = dx;
             $players[id].dy = dy;
             $players[id].crashed = false;
@@ -206,35 +251,18 @@
             $players[id].noTrailPowerupCount = 0;
             $players[id].canPassThroughWallsPowerupCount = 0;
             $players[id].powerupBallTransparency = {value: 0, diff: 0.04};
+            $players[id].maxFramesBetweenGaps = maxFramesBetweenGaps;
+            $players[id].onlyRightAnglesPowerupCount = 0;
+            $players[id].hasReleasedLeft = true;
+            $players[id].hasReleasedRight = true;
         }
     }
 
 
     onMount(() => {
         const ctx = canvas.getContext('2d');
-        function getColorAtPoint(x, y) {
-            // Get the image data for the specified pixel
-            var imageData = ctx.getImageData(x, y, 1, 1);
-            var data = imageData.data;
-
-            // Extract the RGB values
-            var red = data[0];
-            var green = data[1];
-            var blue = data[2];
-            var alpha = data[3] / 255; // Alpha value (transparency)
-
-            // Return the color in RGBA format
-            return 'rgba(' + red + ',' + green + ',' + blue + ',' + alpha + ')';
-        }
 
         function isPointOccupied(px, py, ballRadius, id) {
-            // Get the image data for the specified pixel
-            /*var imageData = ctx.getImageData(px, py, 1, 1);
-            var color = imageData.data;
-            if(color[0] == 0 && color[1] == 0 && color[2] == 0){
-                return false;
-            }
-            return true;*/
             let crashMargin = ballRadius
             for(let i in occupiedPoints){
                 if(occupiedPoints[i].x >= px-crashMargin && occupiedPoints[i].x <= px+crashMargin && occupiedPoints[i].y >= py-crashMargin &&occupiedPoints[i].y <= py+crashMargin){
@@ -269,42 +297,54 @@
         }
 
         function turnRight(id){
-            let turningConstant = $players[id].turningConstant
-            if($players[id].dy >= 0 && $players[id].dx >= 0){
-                $players[id].dx -= turningConstant;
-                $players[id].dy += turningConstant;
+            if($players[id].onlyRightAnglesPowerupCount > 0){
+                [$players[id].dx, $players[id].dy] = [-1*$players[id].dy, $players[id].dx]
             }
-            else if($players[id].dy >= 0 && $players[id].dx < 0){
-                $players[id].dx -= turningConstant;
-                $players[id].dy -= turningConstant;
-            }
-            else if($players[id].dy < 0 && $players[id].dx >= 0){
-                $players[id].dx += turningConstant;
-                $players[id].dy += turningConstant;
-            }
-            else if($players[id].dy < 0 && $players[id].dx < 0){
-                $players[id].dx += turningConstant;
-                $players[id].dy -= turningConstant;
+            else{
+                let turningConstant = $players[id].turningConstant
+
+                if($players[id].dy >= 0 && $players[id].dx >= 0){
+                    $players[id].dx -= turningConstant;
+                    $players[id].dy += turningConstant;
+                }
+                else if($players[id].dy >= 0 && $players[id].dx < 0){
+                    $players[id].dx -= turningConstant;
+                    $players[id].dy -= turningConstant;
+                }
+                else if($players[id].dy < 0 && $players[id].dx >= 0){
+                    $players[id].dx += turningConstant;
+                    $players[id].dy += turningConstant;
+                }
+                else if($players[id].dy < 0 && $players[id].dx < 0){
+                    $players[id].dx += turningConstant;
+                    $players[id].dy -= turningConstant;
+                }
             }
         }
 
         function turnLeft(id){
-            let turningConstant = $players[id].turningConstant
-            if($players[id].dy >= 0 && $players[id].dx >= 0){
-                $players[id].dx += turningConstant;
-                $players[id].dy -= turningConstant;
+            if($players[id].onlyRightAnglesPowerupCount > 0){
+                [$players[id].dx, $players[id].dy] = [$players[id].dy, -1*$players[id].dx]
             }
-            else if($players[id].dy >= 0 && $players[id].dx < 0){
-                $players[id].dx += turningConstant;
-                $players[id].dy += turningConstant;
-            }
-            else if($players[id].dy < 0 && $players[id].dx >= 0){
-                $players[id].dx -= turningConstant;
-                $players[id].dy -= turningConstant;
-            }
-            else if($players[id].dy < 0 && $players[id].dx < 0){
-                $players[id].dx -= turningConstant;
-                $players[id].dy += turningConstant;
+            else{
+                let turningConstant = $players[id].turningConstant
+
+                if($players[id].dy >= 0 && $players[id].dx >= 0){
+                    $players[id].dx += turningConstant;
+                    $players[id].dy -= turningConstant;
+                }
+                else if($players[id].dy >= 0 && $players[id].dx < 0){
+                    $players[id].dx += turningConstant;
+                    $players[id].dy += turningConstant;
+                }
+                else if($players[id].dy < 0 && $players[id].dx >= 0){
+                    $players[id].dx -= turningConstant;
+                    $players[id].dy -= turningConstant;
+                }
+                else if($players[id].dy < 0 && $players[id].dx < 0){
+                    $players[id].dx -= turningConstant;
+                    $players[id].dy += turningConstant;
+                }
             }
         }
 
@@ -465,7 +505,38 @@
                 ctx.stroke()
                 ctx.closePath();
             }
+            else if(power == 'frequentGaps'){
+                 // Set the line to be dotted
+                ctx.setLineDash([4, 4]);
+
+                // Draw the first curve
+                ctx.beginPath();
+                ctx.moveTo(x - 15, y + 15);
+                ctx.quadraticCurveTo(x-15, y-10, x, y);
+                ctx.stroke();
+
+                // Draw the second curve in the opposite direction
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.quadraticCurveTo(x + 15, y+10, x + 15, y - 15);
+                ctx.stroke();
+
+                ctx.setLineDash([0, 0]);
+            }
+            else if(power == 'onlyRightAngles'){
+                ctx.beginPath()
+                ctx.moveTo(x-15, y+15)
+                ctx.lineTo(x-15, y-15)
+                ctx.lineTo(x-5, y-15)
+                ctx.lineTo(x-5, y+15)
+                ctx.lineTo(x+5, y+15)
+                ctx.lineTo(x+5, y-15)
+                ctx.lineTo(x+15, y-15)
+                ctx.lineTo(x+15, y+15)
+                ctx.stroke()
+            }
         }
+
 
         function generateRandomPowerup(){
             let px = Math.random()*canvas.width;
@@ -479,13 +550,13 @@
         function powerCaught(power, type, playerId){
             if(!neutralPowers.includes(power)){ //add to players powerupTimers or opponents powerupTimers
                 if(type == 1){
-                    $players[playerId].powerupTimers.push({'power': power, 'framesLeft': powerUpDuration})
+                    $players[playerId].powerupTimers.push({'power': power, 'framesLeft': powerupDuration})
                     console.log(`${$players[playerId].name} has ${power}`)
                 }
                 else{
                     for(let i in $players){
                         if(parseInt(i) != playerId){
-                            $players[i].powerupTimers.push({'power': power, 'framesLeft': powerUpDuration})
+                            $players[i].powerupTimers.push({'power': power, 'framesLeft': powerupDuration})
                         }
                     }
                 }
@@ -547,20 +618,66 @@
 
                     //$players[id].lastPoints.push($players[id].x, $players[id].y)
                     if(!$players[id].crashed){
+                        if($players[id].canPassThroughWallsPowerupCount > 0){
+                            if($players[id].x >= canvas.width){
+                                $players[id].x = 0;
+                            }
+                            else if($players[id].x <= 0){
+                                $players[id].x = canvas.width;
+                            }
+                            if($players[id].y >= canvas.height){
+                                $players[id].y = 0;
+                            }
+                            else if($players[id].y <= 0){
+                                $players[id].y = canvas.height;
+                            }
+                        }
+                        else{
+                            //wall crash detection
+                            if($players[id].x >= canvas.width || $players[id].x <= 0 || $players[id].y >= canvas.height || $players[id].y <= 0){
+                                $players[id].crashed = true;
+                                crashedPlayers.push($players[id])
+                                for(let i in $players){
+                                    if(!$players[i].crashed){
+                                        $players[i].score++; //give other players a point
+                                    }
+                                }
+                            }
+                        }
                         //crash detection                       without this, the ball crashes into itself immediately
                         if(isPointOccupied($players[id].x + ($players[id].dx*1.2*$players[id].ballRadius), $players[id].y + ($players[id].dy*1.2*$players[id].ballRadius), $players[id].ballRadius, id)){
                             if(!$players[id].noTrail){
                                 console.log(`${$players[id].name} crashed`)
                                 $players[id].crashed = true;
+                                crashedPlayers.push($players[id])
+                                for(let i in $players){
+                                    if(!$players[i].crashed){
+                                        $players[i].score++; //give other players a point
+                                    }
+                                }
                             }
                         }
                         if($players[id].rightPressed){
-                            turnRight(id)
-                            //console.log(`dx: ${Math.round(dx*1000)/1000}, dy: ${Math.round(dy*1000)/1000}, speed: ${Math.round(Math.sqrt(dx**2 + dy**2))}`)
+                            if($players[id].onlyRightAnglesPowerupCount > 0){
+                                if($players[id].hasReleasedRight){
+                                    turnRight(id)
+                                }
+                            }
+                            else{
+                                turnRight(id);
+                            }
+                            $players[id].hasReleasedRight = false;
                         }
                         else if($players[id].leftPressed){
-                            turnLeft(id)
-                            //console.log(`dx: ${Math.round(dx*1000)/1000}, dy: ${Math.round(dy*1000)/1000}, speed: ${Math.round(Math.sqrt(dx**2 + dy**2)*100)/100}`)
+                            if($players[id].onlyRightAnglesPowerupCount > 0){
+                                if($players[id].hasReleasedLeft){
+                                    turnLeft(id)
+                                }
+                            }
+                            else{
+                                turnLeft(id);
+                            }
+                            $players[id].hasReleasedLeft = false;
                         }
                         // passa að hraðinn sé alltaf 1, þ.e. sqrt(dx**2 + dy**2) = 1
                         [$players[id].dx, $players[id].dy] = normalize_vector($players[id].dx, $players[id].dy)
@@ -587,33 +704,12 @@
                         if($players[id].framesSinceLastTrail >= gapLength){
                             $players[id].noTrail = false
                             $players[id].framesSinceLastTrail = 0
-                            $players[id].framesUntilNextNoTrail = Math.round(Math.random()*maxFramesBetweenGaps);
+                            $players[id].framesUntilNextNoTrail = Math.round(Math.random()*$players[id].maxFramesBetweenGaps);
                         }
                     }
 
                     if($players[id].framesUntilNextNoTrail <= 0){
                         $players[id].noTrail = true;
-                    }
-
-
-                    if($players[id].canPassThroughWallsPowerupCount > 0){
-                        if($players[id].x >= canvas.width){
-                            $players[id].x = 0;
-                        }
-                        else if($players[id].x <= 0){
-                            $players[id].x = canvas.width;
-                        }
-                        if($players[id].y >= canvas.height){
-                            $players[id].y = 0;
-                        }
-                        else if($players[id].y <= 0){
-                            $players[id].y = canvas.height;
-                        }
-                    }
-                    else{
-                        if($players[id].x >= canvas.width || $players[id].x <= 0 || $players[id].y >= canvas.height || $players[id].y <= 0){
-                            $players[id].crashed = true;
-                        }
                     }
                 }
 
@@ -630,6 +726,19 @@
                         generateRandomPowerup();
                     }
                 }
+                if(crashedPlayers.length == Object.entries($players).length-1){
+                    startGame = false;
+                    for(let i in $players){
+                        if(!$players[i].crashed){
+                            $players[i].score++; //extra point for winner of round
+                            roundOver = true;
+                            roundWinner = $players[i].name
+                        }
+                        if($players[i].score >= $maxScore){
+                            gameOver = true;
+                        }
+                    }
+                }
             }
             requestAnimationFrame(draw)
         }
@@ -640,7 +749,20 @@
     function keyDown(e){
         e.preventDefault();
         if(e.key == " "){
+            if(roundOver){
+                if(gameOver){
+                    for(let i in $players){
+                        $players[i].score = 0;
+                    }
+                    gameOver = false;
+                }
+                roundOver = false;
+                restartGame()
+                startGame = true;
+            }
+            else{
                 startGame = !startGame;
+            }
         }
         else if(e.key == 'r'){
             console.log('restart')
@@ -667,10 +789,13 @@
         for(let id in $players){
             if(e.keyCode == $players[id].rightKeyCode){
                 $players[id].rightPressed = false;
+                $players[id].hasReleasedRight = true;
+                console.log('right released')
             }
 
             else if(e.keyCode == $players[id].leftKeyCode){
                 $players[id].leftPressed = false;
+                $players[id].hasReleasedLeft = true;
             }
         }
     }
@@ -688,8 +813,28 @@
         <h3>{startGame ? 'GAME ON' : 'Paused'}</h3>
         <p></p>
     </div>
-    <canvas bind:this={canvas} id=game-container width={$canvasDimmensions.width} height={$canvasDimmensions.height}>
-    </canvas>
+    <div style='display:flex; width: 100%'>
+        <div id='canvas-container'>
+            {#if gameOver}
+            <h1 id='round-over-message'>Konec Hry</h1>
+            {:else if roundOver}
+            <h1 id='round-over-message'>{roundWinner} wins <br> Press SPACE to start next round</h1>
+            {/if}
+            <canvas bind:this={canvas} id=game-container width={$canvasDimmensions.width} height={$canvasDimmensions.height}>
+        </div>
+        <div id='score-container'>
+            <h2 id='score-heading'>Score</h2>
+            <p style='margin:0'>(score limit: {$maxScore})</p>
+            <table id='score-table'>
+                {#each Object.entries($players) as [id, player]}
+                <tr class='score-table-row' style={`color: ${player.color}`}>
+                    <td style='text-align:left'>{player.name}:</td>
+                    <td>{player.score}</td>
+                </tr>
+                {/each}
+            </table>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -697,6 +842,7 @@
         display: flex;
         flex-direction: column;
         padding: 1rem;
+        width: 100%;
     }
 
     #top-container{
@@ -710,6 +856,7 @@
         height: 45rem;
         border: 1px white solid;
         background-color: black;
+        float: left;
     }
 
     #buttons-container{
@@ -734,4 +881,40 @@
     #restart-button:hover{
         background-color: rgb(175, 185, 65);
     }
+
+    #score-container{
+        flex-grow: 100;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-left: 1rem;
+    }
+
+    .score-table-row{
+        font-weight: bold;
+    }
+
+    #score-heading{
+        margin: 0;
+    }
+
+    #score-table{
+        width: 100%;
+        table-layout: fixed;
+    }
+
+    #canvas-container{
+        position: relative;
+        text-align: center;
+    }
+
+    #round-over-message{
+        position: absolute; 
+        left: 0; 
+        right: 0; 
+        top: 40%;
+        margin: auto;
+        width: 50rem; /* Need a specific value to work */
+}
+
 </style>

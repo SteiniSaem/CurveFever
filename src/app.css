@@ -1,3 +1,4 @@
+* { box-sizing: border-box; }
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -40,7 +41,7 @@ body {
   margin: 0;
   display: flex;
   place-items: center;
-  min-width: 320px;
+  min-width: 100vw;
   min-height: 100vh;
   background-color: rgb(39, 47, 64);
   color: white;
@@ -56,7 +57,7 @@ h1 {
 }
 
 #app {
-  max-width: 1280px;
+  width: 100%;
   text-align: center;
 }
 
