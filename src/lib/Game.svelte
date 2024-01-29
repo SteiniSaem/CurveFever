@@ -2,6 +2,7 @@
     import { currentPage, players, canvasDimmensions, maxScore } from "../store";
     import { onMount } from "svelte";
     import { startingBallRadius, startingSpeed, maxFramesBetweenGaps, gapLength, powerupDuration } from "./constants";
+    let devMode = false;
 
     let canvas;
     let startGame = false;
@@ -764,7 +765,7 @@
                 startGame = !startGame;
             }
         }
-        else if(e.key == 'r'){
+        else if(e.key == 'r' && devMode){
             console.log('restart')
             restart = true;
         }
@@ -808,10 +809,12 @@
     <div id='top-container'>
         <div id='buttons-container'>
             <button id='back-button' on:click={pageBack}>&#8249;</button>
+            {#if devMode}
             <button id='restart-button' on:click={() => {restart = true}}>&#8635;</button>
+            {/if}
         </div>
-        <h3>{startGame ? 'GAME ON' : 'Paused'}</h3>
-        <p></p>
+        <!--<h3>{startGame ? 'GAME ON' : 'Paused'}</h3>
+        <p></p>-->
     </div>
     <div style='display:flex; width: 100%'>
         <div id='canvas-container'>
@@ -861,7 +864,7 @@
 
     #buttons-container{
         display: flex;
-        height: 3rem;
+        margin-bottom: 1rem;
     }
 
     #back-button{

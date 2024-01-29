@@ -1,6 +1,7 @@
 <script>
     import { currentPage, players, canvasDimmensions, maxScore } from "../store";
     import CustomInput from './CustomInput.svelte'
+    import CustomCheckbox from "./CustomCheckbox.svelte";
     import {isEmpty} from './common';
     import { startingBallRadius, startingSpeed, maxFramesBetweenGaps } from "./constants";
 
@@ -79,7 +80,7 @@
     </tr>
     {#each availablePlayers as p}
     <tr class='player-container'>
-      <td class="player-name" style={`color:${p.color}`}><input type="checkbox" bind:checked={p.checked}> {p.name}</td>
+      <td class="player-name" style={`color:${p.color}`}><CustomCheckbox bind:checked={p.checked}/>&nbsp;&nbsp;&nbsp;&nbsp;{p.name}</td>
       <!--<td class='table-cell'>Left: <input type="text" class='button-input' bind:value={p.leftKeyCode}/></td>
       <td class='table-cell'>Right: <input type="text" class='button-input' bind:value={p.rightKeyCode}/></td>-->
       <td><CustomInput name={`${p.name}-left`} bind:keyCode={p.leftKeyCode}/></td>
@@ -125,6 +126,8 @@
     }
 
     .player-name{
-      text-align: left;
+      display: flex;
+      justify-content: flex-start;
+      width: 12rem;
     }
 </style>
