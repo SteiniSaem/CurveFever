@@ -80,7 +80,7 @@
     </tr>
     {#each availablePlayers as p}
     <tr class='player-container'>
-      <td class="player-name" style={`color:${p.color}`}><CustomCheckbox bind:checked={p.checked}/>&nbsp;&nbsp;&nbsp;&nbsp;{p.name}</td>
+      <td class="player-name" style={`color:${p.color}`}><CustomCheckbox color={p.color} bind:checked={p.checked}/>&nbsp;&nbsp;&nbsp;&nbsp;{p.name}</td>
       <!--<td class='table-cell'>Left: <input type="text" class='button-input' bind:value={p.leftKeyCode}/></td>
       <td class='table-cell'>Right: <input type="text" class='button-input' bind:value={p.rightKeyCode}/></td>-->
       <td><CustomInput name={`${p.name}-left`} bind:keyCode={p.leftKeyCode}/></td>

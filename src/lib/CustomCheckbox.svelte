@@ -1,16 +1,10 @@
 <script>
-    export let checked = false;
-
-    let input;
-
-
-
-    
-
+    export let checked = false; 
+    export let color = 'rgb(0, 255, 0)';
 </script>
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div bind:this={input} id='custom-checkbox' on:click={() => {checked = !checked}}>
+<div style={`color: ${color}`} id='custom-checkbox' on:click={() => {checked = !checked}}>
     {#if checked}
     <p id='checkmark'>&check;</p>
     {/if}
@@ -31,7 +25,6 @@
 }
 
 #checkmark{
-    color: rgb(0, 255, 0);
     font-size: 1.5rem;
 }
 
