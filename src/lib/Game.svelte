@@ -3,6 +3,7 @@
     import { onMount } from "svelte";
     import { startingBallRadius, startingSpeed, maxFramesBetweenGaps, gapLength, powerupDuration } from "./constants";
 
+    //comment
     let canvas;
     let startGame = false;
     let restart = false;
