@@ -4,7 +4,6 @@
     import { startingBallRadius, startingSpeed, maxFramesBetweenGaps, gapLength, powerupDuration } from "./constants";
     let devMode = false;
 
-    //comment
     let canvas;
     let startGame = false;
     let restart = false;
