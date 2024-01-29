@@ -4,6 +4,7 @@
     import { startingBallRadius, startingSpeed, maxFramesBetweenGaps, gapLength, powerupDuration } from "./constants";
     let devMode = false;
 
+    //comment
     let canvas;
     let startGame = false;
     let restart = false;
@@ -36,7 +37,7 @@
             else{
                 for(let i in $players){
                     if(parseInt(i) != id){
-                        $players[id].onlyRightAnglesPowerupCount += 1;
+                        $players[i].onlyRightAnglesPowerupCount += 1;
                     }
                 }
             }
@@ -228,7 +229,7 @@
         let dx, dy;
         occupiedPoints = [];
         framesUntilPowerup = maxFramesUntilPowerup;
-        livePowerups = [];
+        livePowerups = [{x: 500, y: 500, power:"onlyRightAngles", type:2}];
         crashedPlayers = [];
         for(let id in $players){
             [dx, dy] = [Math.random() * (Math.round(Math.random()) ? 1 : -1), Math.random() * Math.round(Math.random()) ? 1 : -1];
