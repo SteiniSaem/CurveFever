@@ -56,7 +56,7 @@
                 for(let i in $players){
                     if(parseInt(i) != id){
                         $players[i].maxFramesBetweenGaps = 70;
-                        $players[id].framesUntilNextNoTrail = Math.round(Math.random()*70)
+                        $players[i].framesUntilNextNoTrail = Math.round(Math.random()*70)
                     }
                 }
             }
@@ -228,7 +228,7 @@
         let dx, dy;
         occupiedPoints = [];
         framesUntilPowerup = maxFramesUntilPowerup;
-        livePowerups = [{x: 500, y: 500, power:"onlyRightAngles", type:2}];
+        livePowerups = [];
         crashedPlayers = [];
         for(let id in $players){
             [dx, dy] = [Math.random() * (Math.round(Math.random()) ? 1 : -1), Math.random() * Math.round(Math.random()) ? 1 : -1];
