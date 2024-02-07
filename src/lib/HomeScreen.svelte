@@ -1,18 +1,18 @@
 <script>
-    import { currentPage, players, canvasDimmensions, maxScore } from "../store";
+    import { currentPage, players, canvasDimmensions, maxScore, activeInput } from "../store";
     import CustomInput from './CustomInput.svelte'
     import CustomCheckbox from "./CustomCheckbox.svelte";
     import {isEmpty} from './common';
     import { startingBallRadius, startingSpeed, maxFramesBetweenGaps } from "./constants";
 
 
-  let availablePlayers = [
-                          {name: 'Red Monkey', color: 'red', leftKeyCode: null, rightKeyCode: null, checked: false},
-                          {name: 'Blue bell', color: 'aqua', leftKeyCode: null, rightKeyCode: null, checked: false},
-                          {name: 'Pink lady', color: '#f047ff', leftKeyCode: null, rightKeyCode: null, checked: false},
-                          {name: 'Yellow fever', color: 'orange', leftKeyCode: null, rightKeyCode: null, checked: false},
-                          {name: 'Greeney', color: '#23ff0f', leftKeyCode: null, rightKeyCode: null, checked: false}
-                        ]
+  let availablePlayers = {
+                          'Red Monkey': {color: 'red', leftKeyCode: null, rightKeyCode: null, checked: false},
+                          'Blue bell': {color: 'aqua', leftKeyCode: null, rightKeyCode: null, checked: false},
+                          'Pink lady': {color: '#f047ff', leftKeyCode: null, rightKeyCode: null, checked: false},
+                          'Yellow fever': {color: 'orange', leftKeyCode: null, rightKeyCode: null, checked: false},
+                          'Greeney': {color: '#23ff0f', leftKeyCode: null, rightKeyCode: null, checked: false}
+  }
 
   let errorMessage = ''
 
@@ -28,6 +28,7 @@
         //gera random tölu frá 0 til 1 og svo 50/50 líkur á að margfalda hana með 1 eða -1. Þannig random tala frá -1 til 1
         [dx, dy] = [Math.random() * (Math.round(Math.random()) ? 1 : -1), Math.random() * Math.round(Math.random()) ? 1 : -1];
         $players[playerId] = {...availablePlayers[i],
+          name: i,
           leftPressed: false,
           rightPressed: false,
           x: Math.floor(Math.random() * ($canvasDimmensions.width*0.8 - $canvasDimmensions.width*0.2)) + $canvasDimmensions.width*0.2,
@@ -68,29 +69,37 @@
     $currentPage = 'game';
   }
 
+  function keyPressed(e){
+    e = e.detail
+    availablePlayers[e.player][`${e.direction}KeyCode`] = e.keyCode;
+    $activeInput = `${e.player}-right`
+  }
+
 </script>
 
 <div id='home-screen' style={$currentPage=='home' ? '' : 'display:none'}>
   <h1 id='title'>Curve Fever</h1>
-  <table id='players-table'>
-    <tr>
-      <th>Player</th>
-      <th>Left</th>
-      <th>Right</th>
-    </tr>
-    {#each availablePlayers as p}
-    <tr class='player-container'>
-      <td class="player-name" style={`color:${p.color}`}><CustomCheckbox color={p.color} bind:checked={p.checked}/>&nbsp;&nbsp;&nbsp;&nbsp;{p.name}</td>
-      <!--<td class='table-cell'>Left: <input type="text" class='button-input' bind:value={p.leftKeyCode}/></td>
-      <td class='table-cell'>Right: <input type="text" class='button-input' bind:value={p.rightKeyCode}/></td>-->
-      <td><CustomInput name={`${p.name}-left`} bind:keyCode={p.leftKeyCode}/></td>
-      <td><CustomInput name={`${p.name}-right`} bind:keyCode={p.rightKeyCode}/></td>
-    </tr>
-    {/each}
-  </table>
-  <p>{errorMessage}</p>
-  <div>
-    <button on:click={startGame}>Start Game</button>
+  <div style='font-size:1.5rem'>
+    <table id='players-table'>
+      <tr>
+        <th>Player</th>
+        <th>Left</th>
+        <th>Right</th>
+      </tr>
+      {#each Object.keys(availablePlayers) as p}
+      <tr class='player-container'>
+        <td class="player-name" style={`color:${availablePlayers[p].color}`}><CustomCheckbox color={availablePlayers[p].color} bind:checked={availablePlayers[p].checked}/>&nbsp;&nbsp;&nbsp;&nbsp;{p}</td>
+        <!--<td class='table-cell'>Left: <input type="text" class='button-input' bind:value={p.leftKeyCode}/></td>
+        <td class='table-cell'>Right: <input type="text" class='button-input' bind:value={p.rightKeyCode}/></td>-->
+        <td><CustomInput name={`${p}-left`} color={availablePlayers[p].color} bind:keyCode={availablePlayers[p].leftKeyCode}/></td>
+        <td><CustomInput name={`${p}-right`} color={availablePlayers[p].color} bind:keyCode={availablePlayers[p].rightKeyCode}/></td>
+      </tr>
+      {/each}
+    </table>
+    <p>{errorMessage}</p>
+    <div>
+      <button on:click={startGame}>Start Game</button>
+    </div>
   </div>
 </div>
 
@@ -114,6 +123,11 @@
 
     td, th{
       width: 8rem;
+      vertical-align: middle;
+    }
+
+    tr, .player-name{
+      height: 3.5rem;
     }
 
     .button-input{
@@ -129,5 +143,6 @@
       display: flex;
       justify-content: flex-start;
       width: 12rem;
+      align-items: center;
     }
 </style>
