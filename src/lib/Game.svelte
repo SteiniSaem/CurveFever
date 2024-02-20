@@ -769,9 +769,9 @@
             console.log('restart')
             restart = true;
         }
-        else if(e.key == 'c'){
+        /*else if(e.key == 'c'){
             $players[1].noTrail = !$players[1].noTrail;
-        }
+        }*/
         else{
             for(let id in $players){
                 if(e.keyCode == $players[id].rightKeyCode){

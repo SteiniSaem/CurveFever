@@ -5,13 +5,23 @@
     import {isEmpty} from './common';
     import { startingBallRadius, startingSpeed, maxFramesBetweenGaps } from "./constants";
 
+    /*
+      OG curve fever nöfn
+      Red=Fred
+      Green=Greenlee
+      Pink=Pinkney
+      Blue=Bluebell
+      Orange=Willem
+      Grey=Greydon
+    */
 
   let availablePlayers = {
-                          'Red Monkey': {color: 'red', leftKeyCode: null, rightKeyCode: null, checked: false},
-                          'Blue bell': {color: 'aqua', leftKeyCode: null, rightKeyCode: null, checked: false},
-                          'Pink lady': {color: '#f047ff', leftKeyCode: null, rightKeyCode: null, checked: false},
-                          'Yellow fever': {color: 'orange', leftKeyCode: null, rightKeyCode: null, checked: false},
-                          'Greeney': {color: '#23ff0f', leftKeyCode: null, rightKeyCode: null, checked: false}
+    'Red Monkey': {color: 'red', leftKeyCode: null, rightKeyCode: null, checked: false},
+    'Blue bell': {color: 'aqua', leftKeyCode: null, rightKeyCode: null, checked: false},
+    'Pinky Poo': {color: '#f047ff', leftKeyCode: null, rightKeyCode: null, checked: false},
+    'Yellow fever': {color: 'orange', leftKeyCode: null, rightKeyCode: null, checked: false},
+    'Greeney': {color: '#23ff0f', leftKeyCode: null, rightKeyCode: null, checked: false},
+    "Gray Goose": {color: '#c4c4c4', leftKeyCode: null, rightKeyCode: null, checked: false},
   }
 
   let errorMessage = ''
@@ -122,7 +132,7 @@
     }
 
     td, th{
-      width: 8rem;
+      width: 9rem;
       vertical-align: middle;
     }
 

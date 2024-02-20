@@ -41,7 +41,7 @@
     
 
 </script>
-<svelte:window on:keypress={(e) => {if($currentPage == 'home') keyDown(e);}}/>
+<svelte:window on:keydown={(e) => {if($currentPage == 'home') keyDown(e);}}/>
 <div bind:this={input} id='custom-input' on:click={() => {$activeInput = name;}}>
     <p id='text'>{key}</p>
 </div>
