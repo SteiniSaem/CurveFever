@@ -28,6 +28,8 @@
         return keys[ keys.length * Math.random() << 0];
     }
 
+    //POWER UPS STARTING////////////////////////////////////////////////////////////////////////
+
     function onlyRightAngles(id, activate, type){
         if(activate){
             if(type == 1){
@@ -215,7 +217,10 @@
         livePowerups = [];
     }
 
+    //POWER UPS ENDING ///////////////////////////////////////////////////////////////////////
+
     function pageBack(){
+        $players = {}
         startGame = false;
         restart = true;
         gameOver = false;

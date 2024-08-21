@@ -20,7 +20,7 @@
     'Blue bell': {color: 'aqua', leftKeyCode: null, rightKeyCode: null, checked: false},
     'Pinky Poo': {color: '#f047ff', leftKeyCode: null, rightKeyCode: null, checked: false},
     'Yellow fever': {color: 'orange', leftKeyCode: null, rightKeyCode: null, checked: false},
-    'Greeney': {color: '#23ff0f', leftKeyCode: null, rightKeyCode: null, checked: false},
+    'Greenlee': {color: '#23ff0f', leftKeyCode: null, rightKeyCode: null, checked: false},
     "Gray Goose": {color: '#c4c4c4', leftKeyCode: null, rightKeyCode: null, checked: false},
   }
 
@@ -32,7 +32,7 @@
     for(var i in availablePlayers){
       if(availablePlayers[i].checked){
         if(availablePlayers[i].leftKeyCode == null || availablePlayers[i].rightKeyCode == null){
-          errorMessage = `Missing buttons for ${availablePlayers[i].name}`
+          errorMessage = `Missing buttons for ${i}`
           return;
         }
         //gera random tölu frá 0 til 1 og svo 50/50 líkur á að margfalda hana með 1 eða -1. Þannig random tala frá -1 til 1
