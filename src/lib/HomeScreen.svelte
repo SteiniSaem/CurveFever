@@ -106,9 +106,9 @@
       </tr>
       {/each}
     </table>
-    <p>{errorMessage}</p>
+    <p style='height: 1.5rem'>{errorMessage}</p>
     <div>
-      <button on:click={startGame}>Start Game</button>
+      <button id='start-game-button' on:click={startGame}>Start Game</button>
     </div>
   </div>
 </div>
@@ -155,4 +155,14 @@
       width: 12rem;
       align-items: center;
     }
+
+    #start-game-button{
+      background-color: rgb(25, 180, 25);
+      transition: background-color 100ms linear;
+    }
+
+    #start-game-button:hover{
+      background-color: rgb(49, 200, 49);
+    }
+
 </style>
